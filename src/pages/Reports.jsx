@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
-import { FileText, Download, Search } from 'lucide-react';
+import { FileText, Download, Search, BarChart3, Fuel, DollarSign, Hash, Calendar } from 'lucide-react';
 import { Form, Button } from 'react-bootstrap';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import api from '../services/api';
 
 const Reports = () => {
@@ -33,7 +34,7 @@ const Reports = () => {
     if (!report || report.invoices.length === 0) return;
 
     const sep = ',';
-    const header = ['Invoice No','Date','Airline','Airline Code','Vendor','Vendor Code','Quantity (L)','Unit Price','Total','Remarks'].join(sep);
+    const header = ['Invoice No', 'Date', 'Airline', 'Airline Code', 'Vendor', 'Vendor Code', 'Quantity (L)', 'Unit Price', 'Total', 'Remarks'].join(sep);
     const rows = report.invoices.map(inv =>
       [
         inv.invoice_no,
@@ -56,7 +57,7 @@ const Reports = () => {
       `Total Amount,,,$${Number(report.total_amount).toLocaleString()}`,
     ].join('\n');
 
-    const csv = `\uFEFF${header}\n${rows}\n${summary}`;
+    const csv = `﻿${header}\n${rows}\n${summary}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -95,7 +96,7 @@ const Reports = () => {
     y += 7;
 
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
-    report.invoices.forEach((inv, idx) => {
+    report.invoices.forEach((inv) => {
       if (y > 185) {
         doc.addPage();
         y = 15;
@@ -132,43 +133,64 @@ const Reports = () => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="page-header">
         <div>
-          <h4 className="fw-bold mb-1">Invoice Report</h4>
-          <p className="text-secondary mb-0">View and export filtered transaction reports.</p>
+          <h1 className="page-title">Reports</h1>
+          <p className="page-subtitle">View and export filtered transaction reports.</p>
         </div>
         {report && report.invoices.length > 0 && (
-          <div className="d-flex gap-2">
-            <button className="btn btn-outline-primary d-flex align-items-center gap-2 hover-lift" onClick={downloadCSV}>
-              <Download size={16} /> CSV
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn-outline-secondary" onClick={downloadCSV}>
+              <Download size={14} />
+              Export CSV
             </button>
-            <button className="btn btn-primary d-flex align-items-center gap-2 hover-lift" onClick={downloadPDF}>
-              <Download size={16} /> PDF
+            <button className="btn btn-primary" onClick={downloadPDF}>
+              <Download size={14} />
+              Export PDF
             </button>
           </div>
         )}
       </div>
 
-      <div className="glass-card p-4 mb-4">
+      {/* Filter Panel */}
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--r-xl)',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '1.5rem',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+          <Calendar size={15} color="var(--primary)" />
+          <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>Date Range Filter</span>
+        </div>
         <Form onSubmit={fetchReport}>
-          <div className="row g-3 align-items-end">
-            <div className="col-md-3">
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: '1 1 160px', minWidth: 160 }}>
               <Form.Group>
-                <Form.Label className="text-secondary small mb-1">From Date</Form.Label>
+                <Form.Label>From Date</Form.Label>
                 <Form.Control type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
               </Form.Group>
             </div>
-            <div className="col-md-3">
+            <div style={{ flex: '1 1 160px', minWidth: 160 }}>
               <Form.Group>
-                <Form.Label className="text-secondary small mb-1">To Date</Form.Label>
+                <Form.Label>To Date</Form.Label>
                 <Form.Control type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
               </Form.Group>
             </div>
-            <div className="col-md-3 d-flex gap-2">
-              <Button variant="primary" type="submit" disabled={loading} className="d-flex align-items-center gap-2">
-                <Search size={16} /> {loading ? 'Loading...' : 'Generate Report'}
+            <div style={{ display: 'flex', gap: '0.5rem', paddingBottom: '0.0625rem' }}>
+              <Button variant="primary" type="submit" disabled={loading}>
+                <Search size={14} />
+                {loading ? 'Loading…' : 'Generate Report'}
               </Button>
-              <Button variant="outline-secondary" onClick={() => { setFromDate(''); setToDate(''); setReport(null); }}>
+              <Button
+                variant="outline-secondary"
+                type="button"
+                onClick={() => { setFromDate(''); setToDate(''); setReport(null); }}
+              >
                 Clear
               </Button>
             </div>
@@ -177,58 +199,148 @@ const Reports = () => {
       </div>
 
       {loading ? (
-        <div className="p-5 text-center"><div className="spinner-border text-primary" role="status"></div></div>
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <div className="spinner-border text-primary" role="status" />
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.75rem', fontSize: '0.875rem' }}>Generating report…</p>
+        </div>
       ) : report ? (
         <>
+          {/* Summary Cards */}
           <div className="row g-3 mb-4">
-            <div className="col-md-4">
-              <div className="glass-card p-3 text-center">
-                <p className="text-secondary small mb-1">Total Records</p>
-                <h3 className="fw-bold mb-0 text-primary">{report.total_records}</h3>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="glass-card p-3 text-center">
-                <p className="text-secondary small mb-1">Total Fuel (L)</p>
-                <h3 className="fw-bold mb-0 text-success">{Number(report.total_fuel_quantity).toLocaleString()}</h3>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="glass-card p-3 text-center">
-                <p className="text-secondary small mb-1">Total Revenue</p>
-                <h3 className="fw-bold mb-0 text-warning">${Number(report.total_amount).toLocaleString()}</h3>
-              </div>
-            </div>
+            {[
+              {
+                label: 'Total Records',
+                value: report.total_records,
+                icon: Hash,
+                color: '#2563EB',
+                bg: 'var(--primary-light)',
+              },
+              {
+                label: 'Total Fuel (L)',
+                value: Number(report.total_fuel_quantity).toLocaleString(),
+                icon: Fuel,
+                color: '#F59E0B',
+                bg: 'var(--warning-light)',
+              },
+              {
+                label: 'Total Revenue',
+                value: `$${Number(report.total_amount).toLocaleString()}`,
+                icon: DollarSign,
+                color: '#10B981',
+                bg: 'var(--success-light)',
+              },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={i} className="col-12 col-md-4">
+                  <motion.div
+                    className="report-stat"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08, duration: 0.3 }}
+                  >
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 'var(--r-lg)',
+                        background: item.bg,
+                        color: item.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 0.875rem',
+                      }}
+                    >
+                      <Icon size={18} />
+                    </div>
+                    <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: '0.375rem' }}>
+                      {item.label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '1.5rem',
+                        fontWeight: 800,
+                        color: item.color,
+                        letterSpacing: '-0.03em',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                  </motion.div>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="glass-card">
+          {/* Report Table */}
+          <div className="table-card">
+            <div
+              style={{
+                padding: '1rem 1.25rem',
+                borderBottom: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <BarChart3 size={15} color="var(--primary)" />
+              <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>Invoice Breakdown</span>
+              <span className="badge-base badge-neutral" style={{ marginLeft: '0.5rem' }}>
+                {report.invoices.length} records
+              </span>
+            </div>
+
             {report.invoices.length === 0 ? (
-              <div className="p-5 text-center text-secondary">No transactions found for the selected period.</div>
+              <div className="empty-state">
+                <div className="empty-state-icon"><FileText size={22} /></div>
+                <div className="empty-state-title">No transactions found</div>
+                <div className="empty-state-desc">No transactions match the selected date range.</div>
+              </div>
             ) : (
               <div className="table-responsive">
-                <table className="table table-hover mb-0">
+                <table className="table">
                   <thead>
                     <tr>
-                      <th className="px-4 py-3">Invoice No</th>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Airline</th>
-                      <th className="px-4 py-3">Vendor</th>
-                      <th className="px-4 py-3 text-end">Quantity (L)</th>
-                      <th className="px-4 py-3 text-end">Unit Price</th>
-                      <th className="px-4 py-3 text-end">Total</th>
+                      <th>Invoice No</th>
+                      <th>Date</th>
+                      <th>Airline</th>
+                      <th>Vendor</th>
+                      <th style={{ textAlign: 'right' }}>Quantity (L)</th>
+                      <th style={{ textAlign: 'right' }}>Unit Price</th>
+                      <th style={{ textAlign: 'right' }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {report.invoices.map(inv => (
-                      <tr key={inv.invoice_no}>
-                        <td className="px-4 py-3 fw-bold text-primary">{inv.invoice_no}</td>
-                        <td className="px-4 py-3">{inv.transaction_date}</td>
-                        <td className="px-4 py-3">{inv.airline_name} <span className="text-secondary">({inv.airline_code})</span></td>
-                        <td className="px-4 py-3">{inv.vendor_name} <span className="text-secondary">({inv.vendor_code})</span></td>
-                        <td className="px-4 py-3 text-end">{Number(inv.fuel_quantity).toLocaleString()}</td>
-                        <td className="px-4 py-3 text-end">${Number(inv.fuel_price).toFixed(4)}</td>
-                        <td className="px-4 py-3 text-end text-success fw-bold">${Number(inv.total_amount).toLocaleString()}</td>
-                      </tr>
+                    {report.invoices.map((inv, i) => (
+                      <motion.tr
+                        key={inv.invoice_no}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.02 }}
+                      >
+                        <td>
+                          <span className="badge-base badge-primary" style={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                            {inv.invoice_no}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{inv.transaction_date}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{inv.airline_name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{inv.airline_code}</div>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{inv.vendor_name}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                          {Number(inv.fuel_quantity).toLocaleString()}
+                        </td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
+                          ${Number(inv.fuel_price).toFixed(4)}
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--success)', fontVariantNumeric: 'tabular-nums' }}>
+                          ${Number(inv.total_amount).toLocaleString()}
+                        </td>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
@@ -237,9 +349,23 @@ const Reports = () => {
           </div>
         </>
       ) : (
-        <div className="glass-card p-5 text-center text-secondary">
-          <FileText size={48} className="mb-3 opacity-50" />
-          <p className="mb-0">Select a date range and click "Generate Report" to view transaction data.</p>
+        <div
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--r-xl)',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          <div className="empty-state" style={{ padding: '4rem 1.5rem' }}>
+            <div className="empty-state-icon" style={{ width: 64, height: 64, borderRadius: 'var(--r-2xl)' }}>
+              <BarChart3 size={28} />
+            </div>
+            <div className="empty-state-title" style={{ fontSize: '1rem' }}>Ready to generate a report</div>
+            <div className="empty-state-desc">
+              Select a date range above and click "Generate Report" to view your fuel transaction data.
+            </div>
+          </div>
         </div>
       )}
     </div>

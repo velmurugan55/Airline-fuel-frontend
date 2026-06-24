@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Plus, Edit2, Trash2, Search, Plane } from 'lucide-react';
+import { Offcanvas, Form, Button } from 'react-bootstrap';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import api from '../services/api';
 
 const Airlines = () => {
   const [airlines, setAirlines] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ airline_code: '', airline_name: '', contact_person: '', email: '', phone: '', address: '', gst_number: '' });
@@ -26,9 +28,7 @@ const Airlines = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAirlines();
-  }, []);
+  useEffect(() => { fetchAirlines(); }, []);
 
   const handleShow = (airline = null) => {
     if (airline) {
@@ -103,141 +103,218 @@ const Airlines = () => {
     }
   };
 
+  const filtered = airlines.filter(a =>
+    a.airline_name.toLowerCase().includes(search.toLowerCase()) ||
+    a.airline_code.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="page-header">
         <div>
-          <h4 className="fw-bold mb-1">Airlines</h4>
-          <p className="text-secondary mb-0">Manage airline partners and contact details.</p>
+          <h1 className="page-title">Airlines</h1>
+          <p className="page-subtitle">Manage airline partners and contact details.</p>
         </div>
-        <button className="btn btn-primary d-flex align-items-center gap-2 hover-lift" onClick={() => handleShow()}>
-          <Plus size={18} />
-          <span>Add Airline</span>
+        <button className="btn btn-primary" onClick={() => handleShow()}>
+          <Plus size={15} />
+          Add Airline
         </button>
       </div>
 
-      <div className="glass-card">
+      <div className="table-card">
+        <div className="table-toolbar">
+          <div className="table-search">
+            <Search size={14} className="table-search-icon" />
+            <input
+              type="text"
+              placeholder="Search airlines…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+            {filtered.length} {filtered.length === 1 ? 'airline' : 'airlines'}
+          </div>
+        </div>
+
         {loading ? (
-          <div className="p-5 text-center"><div className="spinner-border text-primary" role="status"></div></div>
+          <div style={{ padding: '2rem' }}>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+                <div className="skeleton" style={{ width: 32, height: 32, borderRadius: 'var(--r)' }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton" style={{ width: '30%', height: 10, marginBottom: 6 }} />
+                  <div className="skeleton" style={{ width: '20%', height: 8 }} />
+                </div>
+                <div className="skeleton" style={{ width: 80, height: 10 }} />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon"><Plane size={22} /></div>
+            <div className="empty-state-title">{search ? 'No results found' : 'No airlines yet'}</div>
+            <div className="empty-state-desc">
+              {search ? `No airlines match "${search}".` : 'Add your first airline to get started.'}
+            </div>
+          </div>
         ) : (
           <div className="table-responsive">
-            <table className="table table-hover mb-0">
+            <table className="table">
               <thead>
                 <tr>
-                  <th className="px-4 py-3">Logo</th>
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">GST No</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Address</th>
-                  <th className="px-4 py-3 text-end">Actions</th>
+                  <th>Logo</th>
+                  <th>Code</th>
+                  <th>Airline Name</th>
+                  <th>GST Number</th>
+                  <th>Phone</th>
+                  <th>Address</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {airlines.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-4 text-secondary">No airlines found.</td>
-                  </tr>
-                ) : (
-                  airlines.map(airline => (
-                    <tr key={airline.id}>
-                      <td className="px-4 py-3">
-                        {airline.logo ? (
-                          <img src={airline.logo} alt="" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 4 }} />
-                        ) : (
-                          <span className="text-secondary">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 fw-medium">{airline.airline_code}</td>
-                      <td className="px-4 py-3">{airline.airline_name}</td>
-                      <td className="px-4 py-3 text-muted small">{airline.gst_number || '-'}</td>
-                      <td className="px-4 py-3">{airline.phone || '-'}</td>
-                      <td className="px-4 py-3 text-muted small" style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{airline.address || '-'}</td>
-                      <td className="px-4 py-3 text-end">
-                        <button className="btn btn-sm btn-link text-primary p-1 me-2 hover-lift" onClick={() => handleShow(airline)} title="Edit">
-                          <Edit2 size={16} />
+                {filtered.map((airline, i) => (
+                  <motion.tr
+                    key={airline.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03, duration: 0.22 }}
+                  >
+                    <td>
+                      {airline.logo ? (
+                        <img src={airline.logo} alt="" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
+                      ) : (
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 'var(--r)',
+                            background: 'var(--primary-light)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Plane size={13} color="var(--primary)" />
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <span className="badge-base badge-primary" style={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                        {airline.airline_code}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>{airline.airline_name}</td>
+                    <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.8125rem' }}>
+                      {airline.gst_number || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{airline.phone || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                    <td
+                      style={{
+                        color: 'var(--text-secondary)',
+                        fontSize: '0.8125rem',
+                        maxWidth: 180,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {airline.address || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                        <button className="btn-icon-ghost primary" onClick={() => handleShow(airline)} title="Edit">
+                          <Edit2 size={14} />
                         </button>
-                        <button className="btn btn-sm btn-link text-danger p-1 hover-lift" onClick={() => handleDelete(airline.id)} title="Delete">
-                          <Trash2 size={16} />
+                        <button className="btn-icon-ghost danger" onClick={() => handleDelete(airline.id)} title="Delete">
+                          <Trash2 size={14} />
                         </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
-      <Modal show={showModal} onHide={handleClose} centered backdrop="static">
-        <Form onSubmit={handleSubmit}>
-          <Modal.Header closeButton className="border-bottom border-secondary border-opacity-25">
-            <Modal.Title className="fs-5 fw-bold">{editingId ? 'Edit Airline' : 'Add Airline'}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="px-4 py-4">
+      {/* Offcanvas Drawer */}
+      <Offcanvas show={showModal} onHide={handleClose} placement="end" backdrop="static">
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>{editingId ? 'Edit Airline' : 'Add Airline'}</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <Form onSubmit={handleSubmit}>
             <div className="row g-3">
-              <div className="col-md-4">
+              <div className="col-5">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Airline Code *</Form.Label>
-                  <Form.Control type="text" name="airline_code" value={formData.airline_code} onChange={handleChange} required disabled={!!editingId} />
+                  <Form.Label>Airline Code *</Form.Label>
+                  <Form.Control type="text" name="airline_code" value={formData.airline_code} onChange={handleChange} required disabled={!!editingId} placeholder="e.g. GA" />
                 </Form.Group>
               </div>
-              <div className="col-md-8">
+              <div className="col-7">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Airline Name *</Form.Label>
-                  <Form.Control type="text" name="airline_name" value={formData.airline_name} onChange={handleChange} required />
+                  <Form.Label>Airline Name *</Form.Label>
+                  <Form.Control type="text" name="airline_name" value={formData.airline_name} onChange={handleChange} required placeholder="Full name" />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-12">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">GST Number</Form.Label>
+                  <Form.Label>GST Number</Form.Label>
                   <Form.Control type="text" name="gst_number" value={formData.gst_number} onChange={handleChange} placeholder="27AABCU9603R1ZM" />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-6">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Phone</Form.Label>
-                  <Form.Control type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="+62-21-2351-9999" />
-                </Form.Group>
-              </div>
-              <div className="col-md-6">
-                <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Contact Person</Form.Label>
+                  <Form.Label>Contact Person</Form.Label>
                   <Form.Control type="text" name="contact_person" value={formData.contact_person} onChange={handleChange} />
                 </Form.Group>
               </div>
-              <div className="col-md-6">
+              <div className="col-6">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Email</Form.Label>
+                  <Form.Label>Phone</Form.Label>
+                  <Form.Control type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="+62-21-xxx" />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label>Email</Form.Label>
                   <Form.Control type="email" name="email" value={formData.email} onChange={handleChange} />
                 </Form.Group>
               </div>
               <div className="col-12">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Address</Form.Label>
+                  <Form.Label>Address</Form.Label>
                   <Form.Control as="textarea" rows={2} name="address" value={formData.address} onChange={handleChange} placeholder="Company address" />
                 </Form.Group>
               </div>
               <div className="col-12">
                 <Form.Group>
-                  <Form.Label className="text-secondary small mb-1">Logo</Form.Label>
-                  <div className="d-flex align-items-center gap-3">
+                  <Form.Label>Logo</Form.Label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Form.Control type="file" accept="image/*" onChange={handleLogoChange} />
                     {logoPreview && (
-                      <img src={logoPreview} alt="logo preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 4, border: '1px solid var(--border-color)' }} />
+                      <img src={logoPreview} alt="preview" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 4, border: '1px solid var(--border)' }} />
                     )}
                   </div>
                 </Form.Group>
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer className="border-top border-secondary border-opacity-25">
-            <Button variant="link" className="text-secondary text-decoration-none" onClick={handleClose}>Cancel</Button>
-            <Button variant="primary" type="submit">Save Changes</Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
+
+            <div className="divider" style={{ margin: '1.5rem 0 1.25rem' }} />
+
+            <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'flex-end' }}>
+              <Button variant="link" className="text-secondary text-decoration-none" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                {editingId ? 'Save Changes' : 'Add Airline'}
+              </Button>
+            </div>
+          </Form>
+        </Offcanvas.Body>
+      </Offcanvas>
     </div>
   );
 };
