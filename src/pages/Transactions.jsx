@@ -5,8 +5,10 @@ import { Modal, Offcanvas, Button, Form } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import usePermission from '../hooks/usePermission';
 
 const Transactions = () => {
+  const { canCreate, canDownload } = usePermission();
   const [transactions, setTransactions] = useState([]);
   const [airlines, setAirlines] = useState([]);
   const [vendors, setVendors] = useState([]);
@@ -188,10 +190,12 @@ const Transactions = () => {
           <h1 className="page-title">Transactions</h1>
           <p className="page-subtitle">Record fuelling activities and view auto-generated invoices.</p>
         </div>
-        <button className="btn btn-primary" onClick={handleShow}>
-          <Plus size={15} />
-          New Transaction
-        </button>
+        {canCreate('transactions') && (
+          <button className="btn btn-primary" onClick={handleShow}>
+            <Plus size={15} />
+            New Transaction
+          </button>
+        )}
       </div>
 
       <div className="table-card">
@@ -570,10 +574,12 @@ const Transactions = () => {
             <Button variant="link" className="text-secondary text-decoration-none" onClick={() => setShowInvoiceModal(false)}>
               Close
             </Button>
-            <Button variant="primary" onClick={downloadInvoice}>
-              <Download size={14} />
-              Download PDF
-            </Button>
+            {canDownload('transactions') && (
+              <Button variant="primary" onClick={downloadInvoice}>
+                <Download size={14} />
+                Download PDF
+              </Button>
+            )}
           </Modal.Footer>
         )}
       </Modal>

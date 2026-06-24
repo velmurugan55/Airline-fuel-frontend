@@ -5,8 +5,10 @@ import { Form, Button } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import usePermission from '../hooks/usePermission';
 
 const Reports = () => {
+  const { canExport } = usePermission();
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [report, setReport] = useState(null);
@@ -140,14 +142,18 @@ const Reports = () => {
         </div>
         {report && report.invoices.length > 0 && (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-outline-secondary" onClick={downloadCSV}>
-              <Download size={14} />
-              Export CSV
-            </button>
-            <button className="btn btn-primary" onClick={downloadPDF}>
-              <Download size={14} />
-              Export PDF
-            </button>
+            {canExport('reports') && (
+              <button className="btn btn-outline-secondary" onClick={downloadCSV}>
+                <Download size={14} />
+                Export CSV
+              </button>
+            )}
+            {canExport('reports') && (
+              <button className="btn btn-primary" onClick={downloadPDF}>
+                <Download size={14} />
+                Export PDF
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -88,6 +88,15 @@ const Users = () => {
     } catch (err) { toast.error(err.response?.data?.detail || 'Operation failed'); }
   };
 
+  const handleDelete = async (u) => {
+    if (!window.confirm(`Delete user "${u.username}"?`)) return;
+    try {
+      await api.delete(`/users/${u.id}`);
+      toast.success('User deleted');
+      fetchUsers();
+    } catch (err) { toast.error(err.response?.data?.detail || 'Delete failed'); }
+  };
+
   const toggleActive = async (u) => {
     try {
       await api.post(`/users/${u.id}/${u.is_active ? 'deactivate' : 'activate'}`);
@@ -218,6 +227,9 @@ const Users = () => {
                           >
                             {u.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
                           </button>
+                        )}
+                        {canDelete('users') && (
+                          <button className="btn-icon-ghost danger" onClick={() => handleDelete(u)} title="Delete"><Trash2 size={14} /></button>
                         )}
                         <button className="btn-icon-ghost primary" onClick={() => openReset(u.id)} title="Reset Password"><Key size={14} /></button>
                       </div>

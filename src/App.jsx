@@ -13,6 +13,7 @@ import Reports from './pages/Reports';
 import Users from './pages/Users';
 import Roles from './pages/Roles';
 import MenuManagement from './pages/MenuManagement';
+import PermissionGuard from './components/PermissionGuard';
 
 function App() {
   return (
@@ -22,18 +23,18 @@ function App() {
           <Route path="/login" element={<Login />} />
 
           <Route path="/" element={<MainLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="airlines"    element={<Airlines />} />
-            <Route path="vendors"     element={<Vendors />} />
-            <Route path="fuel-prices" element={<FuelPrices />} />
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="reports"     element={<Reports />} />
+            <Route index element={<PermissionGuard><Dashboard /></PermissionGuard>} />
+            <Route path="airlines"    element={<PermissionGuard><Airlines /></PermissionGuard>} />
+            <Route path="vendors"     element={<PermissionGuard><Vendors /></PermissionGuard>} />
+            <Route path="fuel-prices" element={<PermissionGuard><FuelPrices /></PermissionGuard>} />
+            <Route path="transactions" element={<PermissionGuard><Transactions /></PermissionGuard>} />
+            <Route path="reports"     element={<PermissionGuard><Reports /></PermissionGuard>} />
 
             {/* RBAC management routes */}
-            <Route path="users"       element={<Users />} />
-            <Route path="roles"       element={<Roles />} />
-            <Route path="permissions" element={<Roles />} />
-            <Route path="menus"       element={<MenuManagement />} />
+            <Route path="users"       element={<PermissionGuard><Users /></PermissionGuard>} />
+            <Route path="roles"       element={<PermissionGuard><Roles /></PermissionGuard>} />
+            <Route path="permissions" element={<PermissionGuard><Roles /></PermissionGuard>} />
+            <Route path="menus"       element={<PermissionGuard><MenuManagement /></PermissionGuard>} />
           </Route>
         </Routes>
       </AuthProvider>

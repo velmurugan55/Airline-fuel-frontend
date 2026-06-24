@@ -21,6 +21,7 @@ const Roles = () => {
   const [editingId, setEditingId]   = useState(null);
   const [form, setForm]             = useState(EMPTY_FORM);
 
+  const [menusLoading, setMenusLoading] = useState(true);
   const [showPerms, setShowPerms] = useState(false);
   const [permRole, setPermRole]   = useState(null);
   const [permMatrix, setPermMatrix] = useState({});
@@ -32,8 +33,10 @@ const Roles = () => {
   };
 
   const fetchMenus = async () => {
+    setMenusLoading(true);
     try { const res = await api.get('/menus'); setMenus(res.data.data || []); }
     catch { /* silent */ }
+    finally { setMenusLoading(false); }
   };
 
   useEffect(() => { fetchRoles(); fetchMenus(); }, []);
@@ -58,6 +61,10 @@ const Roles = () => {
   };
 
   const openPermissions = async (role) => {
+    if (menusLoading || menus.length === 0) {
+      toast.error('Menu data not loaded yet. Please wait and try again.');
+      return;
+    }
     setPermRole(role);
     try {
       const res = await api.get(`/permissions/roles/${role.id}`);
@@ -87,8 +94,12 @@ const Roles = () => {
   };
 
   const savePermissions = async () => {
+    const permEntries = Object.values(permMatrix);
+    if (permEntries.length === 0) {
+      return toast.error('No permissions to save. Ensure menus are loaded.');
+    }
     try {
-      const permissions = Object.values(permMatrix).map(p => ({
+      const permissions = permEntries.map(p => ({
         menu_id: p.menu_id || p.id,
         ...Object.fromEntries(ALL_ACTIONS.map(a => [a, !!p[a]])),
       }));

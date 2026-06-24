@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Plane, Building2, Droplets, Receipt, BarChart3,
   LogOut, ChevronLeft, ChevronRight, FolderOpen, Activity, Shield,
-  Users, Key, Lock, Menu, Settings, LucideIcon,
+  Users, Key, Lock, Menu, Settings,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,16 +15,6 @@ const ICON_MAP = {
 };
 
 const getIcon = (name) => ICON_MAP[name] || FolderOpen;
-
-// Static fallback (used when role has no RBAC role_id / no menus from API)
-const STATIC_NAV = [
-  { to: '/',            icon: 'LayoutDashboard', label: 'Dashboard',    end: true },
-  { to: '/airlines',    icon: 'Plane',           label: 'Airlines' },
-  { to: '/vendors',     icon: 'Building2',       label: 'Vendors' },
-  { to: '/fuel-prices', icon: 'Droplets',        label: 'Fuel Prices' },
-  { to: '/transactions',icon: 'Receipt',         label: 'Transactions' },
-  { to: '/reports',     icon: 'BarChart3',       label: 'Reports' },
-];
 
 const sidebarVariants = {
   expanded:  { width: 260 },
@@ -65,7 +55,9 @@ function buildTree(flatMenus) {
   flatMenus.forEach(m => {
     if (m.parent_menu_id && map[m.parent_menu_id]) {
       map[m.parent_menu_id].children.push(map[m.menu_id]);
-    } else if (!m.parent_menu_id) {
+    } else {
+      // Promote to root: either it has no parent, or its parent isn't visible
+      // (e.g. parent has can_view=False but child has can_view=True)
       roots.push(map[m.menu_id]);
     }
   });
@@ -123,8 +115,7 @@ function renderTree(nodes, collapsed) {
 const Sidebar = ({ collapsed, onToggle }) => {
   const { logout, user } = useAuth();
   const menus = user?.menus || [];
-  const useDynamic = menus.length > 0;
-  const treeNodes = useDynamic ? buildTree(menus) : null;
+  const treeNodes = buildTree(menus);
   const initials = user?.username ? user.username.slice(0, 2).toUpperCase() : 'U';
   const displayName = user?.username || 'User';
   const roleName = user?.role_name || user?.role || '';
@@ -171,12 +162,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           )}
         </AnimatePresence>
 
-        {useDynamic
-          ? renderTree(treeNodes, collapsed)
-          : STATIC_NAV.map(({ to, icon, label, end }) => (
-              <NavItem key={to} to={to} icon={icon} label={label} collapsed={collapsed} end={end} />
-            ))
-        }
+        {renderTree(treeNodes, collapsed)}
       </nav>
 
       {/* Footer */}

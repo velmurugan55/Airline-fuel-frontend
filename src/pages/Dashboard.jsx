@@ -231,7 +231,7 @@ const Dashboard = () => {
                         <td style={{ color: 'var(--text-secondary)' }}>{t.transaction_date}</td>
                         <td>{Number(t.fuel_quantity).toLocaleString()}</td>
                         <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--success)' }}>
-                          ${Number(t.total_amount).toLocaleString()}
+                          ₹{Number(t.total_amount).toLocaleString('en-IN')}
                         </td>
                       </tr>
                     ))}

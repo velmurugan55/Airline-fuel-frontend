@@ -4,8 +4,10 @@ import { Offcanvas, Form, Button } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import usePermission from '../hooks/usePermission';
 
 const Airlines = () => {
+  const { canCreate, canEdit, canDelete } = usePermission();
   const [airlines, setAirlines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -115,10 +117,12 @@ const Airlines = () => {
           <h1 className="page-title">Airlines</h1>
           <p className="page-subtitle">Manage airline partners and contact details.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => handleShow()}>
-          <Plus size={15} />
-          Add Airline
-        </button>
+        {canCreate('airlines') && (
+          <button className="btn btn-primary" onClick={() => handleShow()}>
+            <Plus size={15} />
+            Add Airline
+          </button>
+        )}
       </div>
 
       <div className="table-card">
@@ -223,12 +227,16 @@ const Airlines = () => {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                        <button className="btn-icon-ghost primary" onClick={() => handleShow(airline)} title="Edit">
-                          <Edit2 size={14} />
-                        </button>
-                        <button className="btn-icon-ghost danger" onClick={() => handleDelete(airline.id)} title="Delete">
-                          <Trash2 size={14} />
-                        </button>
+                        {canEdit('airlines') && (
+                          <button className="btn-icon-ghost primary" onClick={() => handleShow(airline)} title="Edit">
+                            <Edit2 size={14} />
+                          </button>
+                        )}
+                        {canDelete('airlines') && (
+                          <button className="btn-icon-ghost danger" onClick={() => handleDelete(airline.id)} title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

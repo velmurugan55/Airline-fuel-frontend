@@ -4,8 +4,10 @@ import { Offcanvas, Form, Button } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import usePermission from '../hooks/usePermission';
 
 const FuelPrices = () => {
+  const { canCreate, canEdit, canDelete } = usePermission();
   const [fuelPrices, setFuelPrices] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,10 +105,12 @@ const FuelPrices = () => {
           <h1 className="page-title">Fuel Prices</h1>
           <p className="page-subtitle">Manage fuel pricing history per vendor.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => handleShow()}>
-          <Plus size={15} />
-          Add Price
-        </button>
+        {canCreate('fuel_prices') && (
+          <button className="btn btn-primary" onClick={() => handleShow()}>
+            <Plus size={15} />
+            Add Price
+          </button>
+        )}
       </div>
 
       <div className="table-card">
@@ -190,7 +194,7 @@ const FuelPrices = () => {
                             color: isHigh ? 'var(--danger)' : 'var(--success)',
                           }}
                         >
-                          ${priceVal.toFixed(4)}
+                          ₹{priceVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                         <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginLeft: 4 }}>/L</span>
                       </td>
@@ -225,12 +229,16 @@ const FuelPrices = () => {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                          <button className="btn-icon-ghost primary" onClick={() => handleShow(price)} title="Edit">
-                            <Edit2 size={14} />
-                          </button>
-                          <button className="btn-icon-ghost danger" onClick={() => handleDelete(price.id)} title="Delete">
-                            <Trash2 size={14} />
-                          </button>
+                          {canEdit('fuel_prices') && (
+                            <button className="btn-icon-ghost primary" onClick={() => handleShow(price)} title="Edit">
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {canDelete('fuel_prices') && (
+                            <button className="btn-icon-ghost danger" onClick={() => handleDelete(price.id)} title="Delete">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </motion.tr>

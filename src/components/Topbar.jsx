@@ -26,7 +26,7 @@ const Topbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -115,8 +115,8 @@ const Topbar = () => {
             className="topbar-user-btn"
             onClick={() => setDropdownOpen(p => !p)}
           >
-            <div className="topbar-avatar">AD</div>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Admin</span>
+            <div className="topbar-avatar">{user?.username ? user.username.slice(0, 2).toUpperCase() : 'U'}</div>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{user?.username || 'User'}</span>
             <ChevronDown
               size={13}
               style={{
@@ -144,8 +144,8 @@ const Topbar = () => {
               }}
             >
               <div style={{ padding: '1rem 1rem 0.75rem', borderBottom: '1px solid var(--border)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>Admin User</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Administrator</div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.username || 'User'}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.role_name || user?.role || ''}</div>
               </div>
               <div style={{ padding: '0.375rem' }}>
                 <button

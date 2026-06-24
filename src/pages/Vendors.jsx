@@ -4,8 +4,10 @@ import { Offcanvas, Form, Button } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import usePermission from '../hooks/usePermission';
 
 const Vendors = () => {
+  const { canCreate, canEdit, canDelete } = usePermission();
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -94,10 +96,12 @@ const Vendors = () => {
           <h1 className="page-title">Vendors</h1>
           <p className="page-subtitle">Manage fuel suppliers and their details.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => handleShow()}>
-          <Plus size={15} />
-          Add Vendor
-        </button>
+        {canCreate('vendors') && (
+          <button className="btn btn-primary" onClick={() => handleShow()}>
+            <Plus size={15} />
+            Add Vendor
+          </button>
+        )}
       </div>
 
       <div className="table-card">
@@ -193,12 +197,16 @@ const Vendors = () => {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                        <button className="btn-icon-ghost primary" onClick={() => handleShow(vendor)} title="Edit">
-                          <Edit2 size={14} />
-                        </button>
-                        <button className="btn-icon-ghost danger" onClick={() => handleDelete(vendor.id)} title="Delete">
-                          <Trash2 size={14} />
-                        </button>
+                        {canEdit('vendors') && (
+                          <button className="btn-icon-ghost primary" onClick={() => handleShow(vendor)} title="Edit">
+                            <Edit2 size={14} />
+                          </button>
+                        )}
+                        {canDelete('vendors') && (
+                          <button className="btn-icon-ghost danger" onClick={() => handleDelete(vendor.id)} title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
