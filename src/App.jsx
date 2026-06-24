@@ -10,6 +10,9 @@ import Vendors from './pages/Vendors';
 import FuelPrices from './pages/FuelPrices';
 import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
+import Users from './pages/Users';
+import Roles from './pages/Roles';
+import MenuManagement from './pages/MenuManagement';
 
 function App() {
   return (
@@ -17,14 +20,20 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="airlines" element={<Airlines />} />
-            <Route path="vendors" element={<Vendors />} />
+            <Route path="airlines"    element={<Airlines />} />
+            <Route path="vendors"     element={<Vendors />} />
             <Route path="fuel-prices" element={<FuelPrices />} />
             <Route path="transactions" element={<Transactions />} />
-            <Route path="reports" element={<Reports />} />
+            <Route path="reports"     element={<Reports />} />
+
+            {/* RBAC management routes */}
+            <Route path="users"       element={<Users />} />
+            <Route path="roles"       element={<Roles />} />
+            <Route path="permissions" element={<Roles />} />
+            <Route path="menus"       element={<MenuManagement />} />
           </Route>
         </Routes>
       </AuthProvider>
